@@ -59,29 +59,18 @@ def eval_model(dataloaders, device, tokenizer, criterion, model, output_all_resu
             # target_ids_batch_label = target_ids_batch.clone().detach()
             # target_ids_batch_label[target_ids_batch_label == tokenizer.pad_token_id] = -100
 
-            # forward
-            seq2seqLMoutput = model(input_embeddings_batch, input_masks_batch, input_mask_invert_batch, target_ids_batch)
+            predictions=model.generate(input_embeddings_batch, input_masks_batch, input_mask_invert_batch, target_ids_batch,
 
-            """calculate loss"""
-            # logits = seq2seqLMoutput.logits # 8*48*50265
-            # logits = logits.permute(0,2,1) # 8*50265*48
+                                       max_length=56,
+                                       num_beams=1,do_sample=False,
+                                       # num_beams=5,encoder_no_repeat_ngram_size =1,
+                                       # do_sample=True, top_k=15,temperature=0.5,num_return_sequences=5,
+                                       # early_stopping=True
 
-            # loss = criterion(logits, target_ids_batch_label) # calculate cross entropy loss only on encoded target parts
-            # NOTE: my criterion not used
-            loss = seq2seqLMoutput.loss # use the BART language modeling loss
-
-
-            # get predicted tokens
-            # print('target size:', target_ids_batch.size(), ',original logits size:', logits.size())
-            logits = seq2seqLMoutput.logits # 8*48*50265
-            # logits = logits.permute(0,2,1)
-            # print('permuted logits size:', logits.size())
-            probs = logits[0].softmax(dim = 1)
-            # print('probs size:', probs.size())
-            values, predictions = probs.topk(1)
-            # print('predictions before squeeze:',predictions.size())
-            predictions = torch.squeeze(predictions)
-            predicted_string = tokenizer.decode(predictions).split('</s></s>')[0].replace('<s>','')
+                                       )
+            predicted_string=tokenizer.batch_decode(predictions,skip_special_tokens=False)
+            predicted_string=predicted_string.squeeze()
+            
             # print('predicted string:',predicted_string)
             f.write(f'predicted string: {predicted_string}\n')
             f.write(f'################################################\n\n\n')
