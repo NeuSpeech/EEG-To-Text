@@ -71,6 +71,7 @@ def eval_model(dataloaders, device, tokenizer, criterion, model, output_all_resu
             predicted_string=tokenizer.batch_decode(predictions,skip_special_tokens=False)
             predicted_string=predicted_string.squeeze()
             
+            predictions=tokenizer.encode(predicted_string)
             # print('predicted string:',predicted_string)
             f.write(f'predicted string: {predicted_string}\n')
             f.write(f'################################################\n\n\n')
