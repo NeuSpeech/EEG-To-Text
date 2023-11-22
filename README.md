@@ -1,44 +1,36 @@
 # correction on [(AAAI 2022) Open Vocabulary EEG-To-Text Decoding and Zero-shot sentiment classification](https://arxiv.org/abs/2112.02690)
-## Create Environment
-run `conda env create -f environment.yml` to create the conda environment (named "EEGToText") used in our experiments.
-## Download ZuCo datasets
-- Download ZuCo v1.0 'Matlab files' for 'task1-SR','task2-NR','task3-TSR' from https://osf.io/q3zws/files/ under 'OSF Storage' root,  
-unzip and move all `.mat` files to `/dataset/ZuCo/task1-SR/Matlab_files`,`/dataset/ZuCo/task2-NR/Matlab_files`,`/dataset/ZuCo/task3-TSR/Matlab_files` respectively.
-- Download ZuCo v2.0 'Matlab files' for 'task1-NR' from https://osf.io/2urht/files/ under 'OSF Storage' root, unzip and move all `.mat` files to `/dataset/ZuCo/task2-NR-2.0/Matlab_files`.
 
-## Preprocess datasets
-run `bash ./scripts/prepare_dataset.sh` to preprocess `.mat` files and prepare sentiment labels. 
+After scrutilizing the original code shared by Wang Zhenhailong, we discovered that the eval method have an unintentional but very serious mistake in generating predicted strings, which is using teacher forcing implicitly. 
+The code which reaches my concern is:
 
-For each task, all `.mat` files will be converted into one `.pickle` file stored in `/dataset/ZuCo/<task_name>/<task_name>-dataset.pickle`. 
+'''
+seq2seqLMoutput = model(input_embeddings_batch, input_masks_batch, input_mask_invert_batch, target_ids_batch)
+logits = seq2seqLMoutput.logits # bs*seq_len*voc_sz
+probs = logits[0].softmax(dim = 1)
+values, predictions = probs.topk(1)
+predictions = torch.squeeze(predictions)
+predicted_string = tokenizer.decode(predictions) 
+'''
+Therefore resulting in predictions like below:
 
-Sentiment dataset for ZuCo (`sentiment_labels.json`) will be stored in `/dataset/ZuCo/task1-SR/sentiment_labels/sentiment_labels.json`. 
+EEG-To-Text/results/task1_task2_taskNRv2-BrainTranslator_skipstep1-all_generation_results-7_22.txt at main · MikeWangWZHL/EEG-To-Text (github.com)
+![image](https://github.com/NeuSpeech/EEG-To-Text/assets/151606332/7bfbd600-6591-4812-9e22-2b43a0855942)
 
-Sentiment dataset for filtered Stanford Sentiment Treebank will be stored in `/dataset/stanfordsentiment/ternary_dataset.json`
 
-## Usage Example
-### Open vocabulary EEG-To-Text Decoding
-To train an EEG-To-Text decoding model, run `bash ./scripts/train_decoding.sh`.
+In addition, we noticed that some people are using it as code base which generates concerning results. We are not condemning these researchers, we just want to notice them and maybe we can do something together to resolve this problem.
 
-To evaluate the trained EEG-To-Text decoding model from above, run `bash ./scripts/eval_decoding.sh`.
+BELT Bootstrapping Electroencephalography-to-Language Decoding and Zero-Shot SenTiment Classification by Natural Language Supervision
+Aligning Semantic in Brain and Language: A Curriculum Contrastive Method for Electroencephalography-to-Text Generation
+UniCoRN: Unified Cognitive Signal ReconstructioN bridging cognitive signals and human language
+Semantic-aware Contrastive Learning for Electroencephalography-to-Text Generation with Curriculum Learning
+DeWave: Discrete EEG Waves Encoding for Brain Dynamics to Text Translation
 
-For detailed configuration of the available arguments, please refer to function `get_config(case = 'train_decoding')` in `/config.py`
+# We really appreciate the great contribution made by Mr. Wang, however, we should prevent others from continuing this misunderstanding. 
 
-### Zero-shot sentiment classification pipeline 
-We first train the decoder and the classifier individually, and then we evaluate the pipeline on ZuCo task1-SR data.
 
-To run the whole training and evaluation process, run `bash ./scripts/train_eval_zeroshot_pipeline.sh`.
 
-For detailed configuration of the available arguments, please refer to function `get_config(case = 'eval_sentiment')` in `/config.py`
 
-## Citation
-```
-@inproceedings{wang2022open,
-  title={Open vocabulary electroencephalography-to-text decoding and zero-shot sentiment classification},
-  author={Wang, Zhenhailong and Ji, Heng},
-  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
-  volume={36},
-  number={5},
-  pages={5350--5358},
-  year={2022}
-}
-```
+When I pass in pure noise with same input shape, the model will get the same high performance score.
+
+I have written code to use model.generate to eval the model, the result is not so good. **We are open to everyone to scrutinize on this corrected code and run the code. Then, we will show the final performance of this model in this repo and formalize a technical paper.**
+
