@@ -26,7 +26,10 @@ UniCoRN: Unified Cognitive Signal ReconstructioN bridging cognitive signals and 
 Semantic-aware Contrastive Learning for Electroencephalography-to-Text Generation with Curriculum Learning
 DeWave: Discrete EEG Waves Encoding for Brain Dynamics to Text Translation
 
-I have written a corrected version to use model.generate to evaluate the model, the result is not so good. **We are open to everyone to scrutinize on this corrected code and run the code. Then, we will show the final performance of this model in this repo and formalize a technical paper.**
+We have written a corrected version to use model.generate to evaluate the model, the result is not so good. 
+Basicly, we changed the model_decoding.py and eval_decoding.py to add model.generate for its originally nn.Module class model, and used model.generate to predict strings.
+
+**We are open to everyone to scrutinize on this corrected code and run the code. Then, we will show the final performance of this model in this repo and formalize a technical paper.**
 # We really appreciate the great contribution made by Mr. Wang, however, we should prevent others from continuing this misunderstanding. 
 
 
