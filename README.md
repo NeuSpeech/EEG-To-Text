@@ -1,7 +1,7 @@
 # Correction on [(AAAI 2022) Open Vocabulary EEG-To-Text Decoding and Zero-shot sentiment classification](https://arxiv.org/abs/2112.02690)
 
 **First of all, we are not pointing at others, we do this correction due to no offense, but a kind reminder of being careful of the string generation process. 
-We repsect Mr. Wang ver much, and appreciate his great contribution in this area.**
+We repsect Mr. Wang very much, and appreciate his great contribution in this area.**
 
 After scrutilizing [the original code shared by Wang Zhenhailong](https://github.com/MikeWangWZHL/EEG-To-Text), we discovered that the eval method have an unintentional but very serious mistake in generating predicted strings, which is using teacher forcing implicitly. 
 
