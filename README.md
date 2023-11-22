@@ -14,7 +14,7 @@ predictions = torch.squeeze(predictions)
 predicted_string = tokenizer.decode(predictions) 
 ```
 
-Therefore resulting in predictions like below:
+Therefore resulting in [predictions like below](https://github.com/MikeWangWZHL/EEG-To-Text/blob/main/results/task1_task2_taskNRv2-BrainTranslator_skipstep1-all_generation_results-7_22.txt#L61):
 
 ![](https://img-blog.csdnimg.cn/39c3cad1650f41a3ba01948ac60700a4.png)
 
