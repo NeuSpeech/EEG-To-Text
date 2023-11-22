@@ -15,16 +15,16 @@ predicted_string = tokenizer.decode(predictions)
 
 Therefore resulting in predictions like below:
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/39c3cad1650f41a3ba01948ac60700a4.png)
+![](https://img-blog.csdnimg.cn/39c3cad1650f41a3ba01948ac60700a4.png)
 
 
 In addition, we noticed that some people are using it as code base which generates concerning results. We are not condemning these researchers, we just want to notice them and maybe we can do something together to resolve this problem. 
 
-BELT Bootstrapping Electroencephalography-to-Language Decoding and Zero-Shot SenTiment Classification by Natural Language Supervision
-Aligning Semantic in Brain and Language: A Curriculum Contrastive Method for Electroencephalography-to-Text Generation
-UniCoRN: Unified Cognitive Signal ReconstructioN bridging cognitive signals and human language
-Semantic-aware Contrastive Learning for Electroencephalography-to-Text Generation with Curriculum Learning
-DeWave: Discrete EEG Waves Encoding for Brain Dynamics to Text Translation
+[BELT Bootstrapping Electroencephalography-to-Language Decoding and Zero-Shot SenTiment Classification by Natural Language Supervision](https://arxiv.org/pdf/2309.12056)
+[Aligning Semantic in Brain and Language: A Curriculum Contrastive Method for Electroencephalography-to-Text Generation](https://ieeexplore.ieee.org/iel7/7333/4359219/10248031.pdf)
+[UniCoRN: Unified Cognitive Signal ReconstructioN bridging cognitive signals and human language](https://arxiv.org/pdf/2307.05355)
+[Semantic-aware Contrastive Learning for Electroencephalography-to-Text Generation with Curriculum Learning](https://arxiv.org/pdf/2301.09237)
+[DeWave: Discrete EEG Waves Encoding for Brain Dynamics to Text Translation](https://arxiv.org/pdf/2309.14030)
 
 We have written a corrected version to use model.generate to evaluate the model, the result is not so good. 
 Basicly, we changed the model_decoding.py and eval_decoding.py to add model.generate for its originally nn.Module class model, and used model.generate to predict strings.
