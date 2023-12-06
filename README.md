@@ -19,8 +19,55 @@ predicted_string = tokenizer.decode(predictions)
 
 Therefore resulting in [predictions like below](https://github.com/MikeWangWZHL/EEG-To-Text/blob/main/results/task1_task2_taskNRv2-BrainTranslator_skipstep1-all_generation_results-7_22.txt#L61):
 
-![](https://img-blog.csdnimg.cn/39c3cad1650f41a3ba01948ac60700a4.png)
+```
+target string: It isn't that Stealing Harvard is a horrible movie -- if only it were that grand a failure!
+predicted string:  was't a the. is was a bad place, it it it were a.. movie.
+################################################
 
+
+target string: It just doesn't have much else... especially in a moral sense.
+predicted string:  was so't work the to to and not the country sense.
+################################################
+
+
+target string: Those unfamiliar with Mormon traditions may find The Singles Ward occasionally bewildering.
+predicted string:  who with the history may be themselves Mormoning''s amusingering.
+################################################
+
+
+target string: Viewed as a comedy, a romance, a fairy tale, or a drama, there's nothing remotely triumphant about this motion picture.
+predicted string:  the from a whole, it film, and comedy tale, and a tragic, it is nothing quite romantic about it. picture.
+################################################
+
+
+target string: But the talented cast alone will keep you watching, as will the fight scenes.
+predicted string:  the most and of cannot not the entertained. and they the music against.
+################################################
+
+
+target string: It's solid and affecting and exactly as thought-provoking as it should be.
+predicted string:  was a, it, it what it.provoking as it is be.
+################################################
+
+
+target string: Thanks largely to Williams, all the interesting developments are processed in 60 minutes -- the rest is just an overexposed waste of film.
+predicted string:  to to the, the of films and in in in a minutes. and longest is a a afteragerposure, of time time
+################################################
+
+
+target string: Cantet perfectly captures the hotel lobbies, two-lane highways, and roadside cafes that permeate Vincent's days
+predicted string: urtor was describes the spirit'sies and the ofstory streets, and the parking of areate the's life.</s>'sgggggggg,,,,,,,,,,,,,,</s>,,,,,
+################################################
+
+
+target string: An important movie, a reminder of the power of film to move us and to make us examine our values.
+predicted string: nie part in " classic of the importance of the, shape people, our make us think our lives,
+################################################
+
+
+target string: Too much of this well-acted but dangerously slow thriller feels like a preamble to a bigger, more complicated story, one that never materializes.
+predicted string:  bad of a is-known film not over- is like a film-ble to a much, more dramatic story. which that is endsizes.
+```
 
 In addition, we noticed that some people are using it as code base which generates concerning results. We are not condemning these researchers, we just want to notice them and maybe we can do something together to resolve this problem. 
 
