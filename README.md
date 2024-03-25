@@ -1,5 +1,5 @@
 # Correction on [(AAAI 2022) Open Vocabulary EEG-To-Text Decoding and Zero-shot sentiment classification](https://arxiv.org/abs/2112.02690)
-
+# results are updated and code is updated
 **First of all, we are not pointing at others, we do this correction due to no offense, but a kind reminder of being careful of the string generation process. 
 We repsect Mr. Wang very much, and appreciate his great contribution in this area.**
 
