@@ -2,9 +2,11 @@
 *.pickle
 *.mat
 *.json
+*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
+csv_results/
 *.py[cod]
 *$py.class
 
