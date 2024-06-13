@@ -12,10 +12,9 @@ from glob import glob
 import time
 import copy
 from tqdm import tqdm
-from transformers import BertLMHeadModel, BartTokenizer, BartForConditionalGeneration, BartConfig, BartForSequenceClassification, BertTokenizer, BertConfig, BertForSequenceClassification, RobertaTokenizer, RobertaForSequenceClassification
-
+from transformers import BertLMHeadModel, BartTokenizer, BartForConditionalGeneration, BartConfig, BartForSequenceClassification, BertTokenizer, BertConfig, BertForSequenceClassification, RobertaTokenizer, RobertaForSequenceClassification, PegasusForConditionalGeneration, PegasusTokenizer, T5Tokenizer, T5ForConditionalGeneration, BertGenerationEncoder, BertGenerationDecoder, EncoderDecoderConfig, EncoderDecoderModel
 from data import ZuCo_dataset
-from model_decoding import BrainTranslator, BrainTranslatorNaive
+from model_decoding import BrainTranslator, BrainTranslatorNaive, T5Translator
 from config import get_config
 
 def train_model(dataloaders, device, model, criterion, optimizer, scheduler, num_epochs=25, checkpoint_path_best = './checkpoints/decoding/best/temp_decoding.pt', checkpoint_path_last = './checkpoints/decoding/last/temp_decoding.pt'):
@@ -39,7 +38,7 @@ def train_model(dataloaders, device, model, criterion, optimizer, scheduler, num
             running_loss = 0.0
 
             # Iterate over data.
-            for input_embeddings, seq_len, input_masks, input_mask_invert, target_ids, target_mask, sentiment_labels, sent_level_EEG in tqdm(dataloaders[phase]):
+            for input_embeddings, seq_len, input_masks, input_mask_invert, target_ids, target_mask, sentiment_labels in tqdm(dataloaders[phase]):
                 
                 # load in batch
                 input_embeddings_batch = input_embeddings.to(device).float()
@@ -84,11 +83,11 @@ def train_model(dataloaders, device, model, criterion, optimizer, scheduler, num
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         # with torch.autograd.detect_anomaly():
-                        loss.backward()
+                        loss.sum().backward()
                         optimizer.step()
 
                 # statistics
-                running_loss += loss.item() * input_embeddings_batch.size()[0] # batch loss
+                running_loss += loss.sum().item() * input_embeddings_batch.size()[0] # batch loss
                 # print('[DEBUG]loss:',loss.item())
                 # print('#################################')
                 
@@ -154,7 +153,8 @@ if __name__ == '__main__':
     # task_name = 'task1_task2_task3'
     # task_name = 'task1_task2_taskNRv2'
     task_name = args['task_name']
-
+    train_input = args['train_input']
+    print("train_input is:", train_input)   
     save_path = args['save_path']
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -162,6 +162,7 @@ if __name__ == '__main__':
     skip_step_one = args['skip_step_one']
     load_step1_checkpoint = args['load_step1_checkpoint']
     use_random_init = args['use_random_init']
+    device_ids = [0] # device setting
 
     if use_random_init and skip_step_one:
         step2_lr = 5*1e-4
@@ -169,9 +170,9 @@ if __name__ == '__main__':
     print(f'[INFO]using model: {model_name}')
     
     if skip_step_one:
-        save_name = f'{task_name}_finetune_{model_name}_skipstep1_b{batch_size}_{num_epochs_step1}_{num_epochs_step2}_{step1_lr}_{step2_lr}_{dataset_setting}'
+        save_name = f'{task_name}_finetune_{model_name}_skipstep1_b{batch_size}_{num_epochs_step1}_{num_epochs_step2}_{step1_lr}_{step2_lr}_{dataset_setting}_{train_input}'
     else:
-        save_name = f'{task_name}_finetune_{model_name}_2steptraining_b{batch_size}_{num_epochs_step1}_{num_epochs_step2}_{step1_lr}_{step2_lr}_{dataset_setting}'
+        save_name = f'{task_name}_finetune_{model_name}_2steptraining_b{batch_size}_{num_epochs_step1}_{num_epochs_step2}_{step1_lr}_{step2_lr}_{dataset_setting}_{train_input}'
     
     if use_random_init:
         save_name = 'randinit_' + save_name
@@ -223,19 +224,19 @@ if __name__ == '__main__':
     ''' set up dataloader '''
     whole_dataset_dicts = []
     if 'task1' in task_name:
-        dataset_path_task1 = './dataset/ZuCo/task1-SR/pickle/task1-SR-dataset.pickle' 
+        dataset_path_task1 = '/data/johj/ZuCo_data/task1-SR/task1_source.pkl'
         with open(dataset_path_task1, 'rb') as handle:
             whole_dataset_dicts.append(pickle.load(handle))
     if 'task2' in task_name:
-        dataset_path_task2 = './dataset/ZuCo/task2-NR/pickle/task2-NR-dataset.pickle' 
+        dataset_path_task2 = '/data/johj/ZuCo_data/task2-NR/task2_source.pkl' 
         with open(dataset_path_task2, 'rb') as handle:
             whole_dataset_dicts.append(pickle.load(handle))
     if 'task3' in task_name:
-        dataset_path_task3 = './dataset/ZuCo/task3-TSR/pickle/task3-TSR-dataset.pickle' 
+        dataset_path_task3 = '/data/johj/ZuCo_data/task3-TSR/task3_source.pkl' 
         with open(dataset_path_task3, 'rb') as handle:
             whole_dataset_dicts.append(pickle.load(handle))
     if 'taskNRv2' in task_name:
-        dataset_path_taskNRv2 = './dataset/ZuCo/task2-NR-2.0/pickle/task2-NR-2.0-dataset.pickle' 
+        dataset_path_taskNRv2 = '/data/johj/ZuCo_data/task2-NR-2.0/taskNRv2_source.pkl' 
         with open(dataset_path_taskNRv2, 'rb') as handle:
             whole_dataset_dicts.append(pickle.load(handle))
 
@@ -252,21 +253,26 @@ if __name__ == '__main__':
 
     if model_name in ['BrainTranslator','BrainTranslatorNaive']:
         tokenizer = BartTokenizer.from_pretrained('facebook/bart-large')
-    elif model_name == 'BertGeneration':
-        tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
-        config = BertConfig.from_pretrained("bert-base-cased")
-        config.is_decoder = True
+
+    elif model_name == 'PegasusTranslator':
+        tokenizer = PegasusTokenizer.from_pretrained('google/pegasus-xsum')
+    
+    elif model_name == 'T5Translator':
+        tokenizer = T5Tokenizer.from_pretrained("t5-large")
+        #tokenizer.set_prefix_tokens(language='english')
 
     # train dataset
-    train_set = ZuCo_dataset(whole_dataset_dicts, 'train', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting)
+    train_set = ZuCo_dataset(whole_dataset_dicts, 'train', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting, test_input=train_input)
     # dev dataset
-    dev_set = ZuCo_dataset(whole_dataset_dicts, 'dev', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting)
+    dev_set = ZuCo_dataset(whole_dataset_dicts, 'dev', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting, test_input=train_input)
     # test dataset
-    # test_set = ZuCo_dataset(whole_dataset_dict, 'test', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice)
+    # test_set = ZuCo_dataset(whole_dataset_dicts, 'test', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting)
 
+    
     dataset_sizes = {'train': len(train_set), 'dev': len(dev_set)}
     print('[INFO]train_set size: ', len(train_set))
     print('[INFO]dev_set size: ', len(dev_set))
+    # print('[INFO]test_set size: ', len(test_set))
     
     # train dataloader
     train_dataloader = DataLoader(train_set, batch_size = batch_size, shuffle=True, num_workers=4)
@@ -285,14 +291,20 @@ if __name__ == '__main__':
     
         model = BrainTranslator(pretrained, in_feature = 105*len(bands_choice), decoder_embedding_size = 1024, additional_encoder_nhead=8, additional_encoder_dim_feedforward = 2048)
     
-    elif model_name == 'BertGeneration':
-        pretrained = BertLMHeadModel.from_pretrained('bert-base-cased', config=config)
-        model = BrainTranslator(pretrained, in_feature = 105*len(bands_choice), decoder_embedding_size = 768, additional_encoder_nhead=8, additional_encoder_dim_feedforward = 2048)
     elif model_name == 'BrainTranslatorNaive':
         pretrained = BartForConditionalGeneration.from_pretrained('facebook/bart-large')
         model = BrainTranslatorNaive(pretrained, in_feature = 105*len(bands_choice), decoder_embedding_size = 1024, additional_encoder_nhead=8, additional_encoder_dim_feedforward = 2048)
 
+    elif model_name == 'PegasusTranslator':
+        pretrained = PegasusForConditionalGeneration.from_pretrained('google/pegasus-xsum')
+        model = BrainTranslator(pretrained, in_feature = 105*len(bands_choice), decoder_embedding_size = 1024, additional_encoder_nhead=8, additional_encoder_dim_feedforward = 2048)
+    
+    elif model_name == 'T5Translator':
+        pretrained = T5ForConditionalGeneration.from_pretrained("t5-large")
+        model = T5Translator(pretrained, in_feature = 105*len(bands_choice), decoder_embedding_size = 1024, additional_encoder_nhead=8, additional_encoder_dim_feedforward = 2048)
+    
     model.to(device)
+    model = torch.nn.DataParallel(model, device_ids=device_ids)
     
     ''' training loop '''
 
@@ -301,13 +313,14 @@ if __name__ == '__main__':
     ######################################################
 
     # closely follow BART paper
-    if model_name in ['BrainTranslator','BrainTranslatorNaive']:
+    if model_name in ['BrainTranslator','BrainTranslatorNaive', 'PegasusTranslator', 'T5Translator']:
         for name, param in model.named_parameters():
             if param.requires_grad and 'pretrained' in name:
                 if ('shared' in name) or ('embed_positions' in name) or ('encoder.layers.0' in name):
                     continue
                 else:
                     param.requires_grad = False
+
     elif model_name == 'BertGeneration':
         for name, param in model.named_parameters():
             if param.requires_grad and 'pretrained' in name:

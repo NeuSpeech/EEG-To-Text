@@ -75,6 +75,97 @@ class BrainTranslator(nn.Module):
         
         return out
 
+
+from transformers import T5Tokenizer
+""" main architecture for open vocabulary EEG-To-Text decoding"""
+class T5Translator(nn.Module):
+    def __init__(self, pretrained_layers, in_feature = 840, decoder_embedding_size = 1024, additional_encoder_nhead=8, additional_encoder_dim_feedforward = 2048):
+        super(T5Translator, self).__init__()
+        
+        self.pretrained = pretrained_layers
+
+        self.tokenizer = T5Tokenizer.from_pretrained("t5-large")
+        
+        # additional transformer encoder, following BART paper about 
+        self.additional_encoder_layer = nn.TransformerEncoderLayer(d_model=in_feature, nhead=additional_encoder_nhead,  dim_feedforward = additional_encoder_dim_feedforward, batch_first=True)
+        self.additional_encoder = nn.TransformerEncoder(self.additional_encoder_layer, num_layers=6)
+        
+        # print('[INFO]adding positional embedding')
+        # self.positional_embedding = PositionalEncoding(in_feature)
+
+        self.fc1 = nn.Linear(in_feature, decoder_embedding_size)
+
+    def addin_forward(self,input_embeddings_batch,  input_masks_invert):
+        """input_embeddings_batch: batch_size*Seq_len*840"""
+        """input_mask: 1 is not masked, 0 is masked"""
+        """input_masks_invert: 1 is masked, 0 is not masked"""
+
+        # input_embeddings_batch = self.positional_embedding(input_embeddings_batch)
+        # use src_key_padding_masks
+        encoded_embedding = self.additional_encoder(input_embeddings_batch, src_key_padding_mask=input_masks_invert)
+
+        # encoded_embedding = self.additional_encoder(input_embeddings_batch)
+        encoded_embedding = F.relu(self.fc1(encoded_embedding))
+        return encoded_embedding
+
+    @torch.no_grad()
+    def generate(
+            self,
+            input_embeddings_batch, input_masks_batch, input_masks_invert, target_ids_batch_converted,
+            generation_config = None,
+            logits_processor = None,
+            stopping_criteria = None,
+            prefix_allowed_tokens_fn= None,
+            synced_gpus= None,
+            assistant_model = None,
+            streamer= None,
+            negative_prompt_ids= None,
+            negative_prompt_attention_mask = None,
+            **kwargs,
+    ):
+        encoded_embedding=self.addin_forward(input_embeddings_batch, input_masks_invert)
+
+
+        input_ids = self.tokenizer("transcribe in English: ", return_tensors="pt").input_ids.to(encoded_embedding.device)
+        self.task_embedding = self.pretrained.shared(input_ids).to(encoded_embedding.device)
+        task_embedding = self.task_embedding.repeat(encoded_embedding.size(0), 1, 1).to(encoded_embedding.device)
+        encoded_embedding = torch.cat((task_embedding, encoded_embedding), dim=1)
+        input_masks_batch = torch.cat((torch.ones(encoded_embedding.size(0), task_embedding.size(1)).to(encoded_embedding.device), input_masks_batch), dim=1)
+
+
+        output=self.pretrained.generate(
+            inputs_embeds = encoded_embedding,
+            attention_mask = input_masks_batch[:,:encoded_embedding.shape[1]],
+            labels = target_ids_batch_converted,
+            return_dict = True,
+            generation_config=generation_config,
+            logits_processor=logits_processor,
+            stopping_criteria=stopping_criteria,
+            prefix_allowed_tokens_fn=prefix_allowed_tokens_fn,
+            synced_gpus=synced_gpus,
+            assistant_model=assistant_model,
+            streamer=streamer,
+            negative_prompt_ids=negative_prompt_ids,
+            negative_prompt_attention_mask=negative_prompt_attention_mask,
+            **kwargs,)
+
+        return output
+
+    def forward(self, input_embeddings_batch, input_masks_batch, input_masks_invert, target_ids_batch_converted):
+        encoded_embedding=self.addin_forward(input_embeddings_batch, input_masks_invert)
+        
+        # task definition
+        input_ids = self.tokenizer("transcribe in English: ", return_tensors="pt").input_ids.to(encoded_embedding.device)
+        self.task_embedding = self.pretrained.shared(input_ids).to(encoded_embedding.device)
+        task_embedding = self.task_embedding.repeat(encoded_embedding.size(0), 1, 1).to(encoded_embedding.device)
+        encoded_embedding = torch.cat((task_embedding, encoded_embedding), dim=1)
+        input_masks_batch = torch.cat((torch.ones(encoded_embedding.size(0), task_embedding.size(1)).to(encoded_embedding.device), input_masks_batch), dim=1)
+
+        out = self.pretrained(inputs_embeds = encoded_embedding, attention_mask = input_masks_batch,
+                              return_dict = True, labels = target_ids_batch_converted)
+        return out
+
+
 """ crippled open vocabulary EEG-To-Text decoding model w/o additional MTE encoder"""
 class BrainTranslatorNaive(nn.Module):
     def __init__(self, pretrained_layers, in_feature = 840, decoder_embedding_size = 1024, additional_encoder_nhead=8, additional_encoder_dim_feedforward = 2048):
