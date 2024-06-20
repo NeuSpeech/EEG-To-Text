@@ -1,9 +1,14 @@
-The **main branch** contains the final code for our "Are EEG-to-Text Models Working?" paper. Accepted by IJCAI workshop 2024.
-If you have any questions, you can write them in the Issues section or email me at girlsending0@khu.ac.kr.
+The **main branch** contains the final code for our "Are EEG-to-Text Models Working?" paper. 
+
+Accepted by IJCAI workshop 2024.
+
+If you have any questions, you can write them in the Issues section or email Hyejeong Jo at girlsending0@khu.ac.kr.
 
 check our new paper with full detailed comparison of different models on this task at [https://arxiv.org/abs/2405.06459](https://arxiv.org/abs/2405.06459)
+
 overview
 ![image](https://github.com/NeuSpeech/EEG-To-Text/assets/151606332/57212488-b75f-44c7-a265-e2a51483e9f5)
+
 performance
 ![image](https://github.com/NeuSpeech/EEG-To-Text/assets/151606332/df58870c-5277-4935-8c66-15efd58e9283)
 
