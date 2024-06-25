@@ -98,7 +98,7 @@ def get_input_sample(sent_obj, tokenizer, eeg_type = 'GD', bands = ['_t1','_t2',
     if add_CLS_token:
         word_embeddings.append(torch.ones(105*len(bands)))
 
-    for word in sent_obj['word_ft']:
+    for word in sent_obj['word']:
         # add each word's EEG embedding as Tensors
         word_level_eeg_tensor = get_word_embedding_eeg_tensor(word, eeg_type, bands = bands)
         # check none, for v2 dataset
@@ -133,22 +133,22 @@ def get_input_sample(sent_obj, tokenizer, eeg_type = 'GD', bands = ['_t1','_t2',
     input_sample['input_attn_mask'] = torch.zeros(max_len) # 0 is masked out
 
     if add_CLS_token:
-        input_sample['input_attn_mask'][:len(sent_obj['word_ft'])+1] = torch.ones(len(sent_obj['word_ft'])+1) # 1 is not masked
+        input_sample['input_attn_mask'][:len(sent_obj['word'])+1] = torch.ones(len(sent_obj['word'])+1) # 1 is not masked
     else:
-        input_sample['input_attn_mask'][:len(sent_obj['word_ft'])] = torch.ones(len(sent_obj['word_ft'])) # 1 is not masked
+        input_sample['input_attn_mask'][:len(sent_obj['word'])] = torch.ones(len(sent_obj['word'])) # 1 is not masked
     
 
     # mask out padding tokens reverted: handle different use case: this is for pytorch transformers
     input_sample['input_attn_mask_invert'] = torch.ones(max_len) # 1 is masked out
 
     if add_CLS_token:
-        input_sample['input_attn_mask_invert'][:len(sent_obj['word_ft'])+1] = torch.zeros(len(sent_obj['word_ft'])+1) # 0 is not masked
+        input_sample['input_attn_mask_invert'][:len(sent_obj['word'])+1] = torch.zeros(len(sent_obj['word'])+1) # 0 is not masked
     else:
-        input_sample['input_attn_mask_invert'][:len(sent_obj['word_ft'])] = torch.zeros(len(sent_obj['word_ft'])) # 0 is not masked
+        input_sample['input_attn_mask_invert'][:len(sent_obj['word'])] = torch.zeros(len(sent_obj['word'])) # 0 is not masked
 
     # mask out target padding for computing cross entropy loss
     input_sample['target_mask'] = target_tokenized['attention_mask'][0]
-    input_sample['seq_len'] = len(sent_obj['word_ft'])
+    input_sample['seq_len'] = len(sent_obj['word'])
     
     # clean 0 length data
     if input_sample['seq_len'] == 0:
