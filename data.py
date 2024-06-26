@@ -62,17 +62,17 @@ def get_input_sample(sent_obj, tokenizer, eeg_type = 'GD', bands = ['_t1','_t2',
     input_sample['target_ids'] = target_tokenized['input_ids'][0]
     
     # get sentence level EEG features
-    #sent_level_eeg_tensor = get_sent_eeg(sent_obj, bands)
-    try:
-        sent_level_eeg_tensor = torch.from_numpy(sent_obj['sentence_level_rawEEG'])
-    except:
-        return None
+    sent_level_eeg_tensor = get_sent_eeg(sent_obj, bands)
+    # try:
+    #     sent_level_eeg_tensor = torch.from_numpy(sent_obj['sentence_level_EEG']) # This gives a dictionary
+    # except:
+    #     return None
     
     if torch.isnan(sent_level_eeg_tensor).any():
         # print('[NaN sent level eeg]: ', target_string)
         return None
-    if sent_level_eeg_tensor.shape[1] < 30:
-        return None
+    # if sent_level_eeg_tensor.shape[1] < 30:
+    #     return None
     
     input_sample['sent_level_EEG'] = sent_level_eeg_tensor
     #input_sample['sent_level_EEG'] = torch.randn(sent_level_eeg_tensor.size()) # random input code
