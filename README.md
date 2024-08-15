@@ -1,6 +1,6 @@
 The **main branch** contains the final code for our "Are EEG-to-Text Models Working?" paper. 
 
-Accepted by IJCAI workshop 2024.
+Accepted by [IJCAI workshop 2024](https://github.com/user-attachments/files/16624318/IJCAI_hyejeongjo_poster_Final.pdf)
 
 If you have any questions, you can write them in the Issues section or email Hyejeong Jo at girlsending0@khu.ac.kr.
 
