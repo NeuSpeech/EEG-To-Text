@@ -106,3 +106,4 @@ Basicly, we changed the model_decoding.py and eval_decoding.py to add model.gene
 # We really appreciate the great contribution made by Mr. Wang, however, we should prevent others from continuing this misunderstanding. 
 
 
+This work was supported by the Culture, Sports and Tourism R&D Program through the Korea Creative Content Agency grant funded by the Ministry of Culture, Sports and Tourism (RS-2023-00226263), the Institute for Information & Communications Technology Planning & Evaluation (IITP) grant funded by the Korea government (MSIT) (No. RS-2024-00509257, Global AI Frontier Lab), the Information Technology Research Center (ITRC) support program (IITP-2024-RS-2024-00438239) supervised by the IITP, and the IITP grant funded by the Korea government (MSIT) (No. RS-2022-00155911, Artificial Intelligence Convergence Innovation Human Resources Development, Kyung Hee University).
